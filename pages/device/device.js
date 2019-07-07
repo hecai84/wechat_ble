@@ -1,9 +1,8 @@
 const app = getApp()
 Page({
   data: {
-    inputText: 'open',
+    inputText: '',
     receiveText: '',
-    name: '',
     connectedDeviceId: '',
     services: {},
     characteristics: {},
@@ -14,6 +13,21 @@ Page({
       inputText: e.detail.value
     })
     console.log(e.detail.value)
+  },
+  Send10: function()
+  {
+    this.setData({inputText: "open10"})
+    this.Send()
+  },
+  Send30: function()
+  {
+    this.setData({inputText: "open30"})
+    this.Send()
+  },
+  Send60: function()
+  {
+    this.setData({inputText: "open60"})
+    this.Send()
   },
   Send: function () {
     var that = this
@@ -51,7 +65,6 @@ Page({
     var that = this
     console.log(options)
     that.setData({
-      name: options.name,
       connectedDeviceId: options.connectedDeviceId
     })
     wx.getBLEDeviceServices({
@@ -89,6 +102,7 @@ Page({
       })
     })
     wx.onBLECharacteristicValueChange(function (res) {
+      
       var receiveText = app.buf2string(res.value)
       console.log('接收到数据：' + receiveText)
       that.setData({

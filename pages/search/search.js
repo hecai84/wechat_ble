@@ -1,85 +1,30 @@
 const app = getApp()
 Page({
   data: {
+    qrcodeMac: "",
     searching: false,
     devicesList: []
   },
-  Search: function () {
-    var that = this
-    if (!that.data.searching) {
-      wx.closeBluetoothAdapter({
-        complete: function (res) {
-          console.log(res)
-          wx.openBluetoothAdapter({
-            success: function (res) {
-              console.log(res)
-              wx.getBluetoothAdapterState({
-                success: function (res) {
-                  console.log(res)
-                }
-              })
-              wx.startBluetoothDevicesDiscovery({
-                allowDuplicatesKey: false,
-                success: function (res) {
-                  console.log(res)
-                  that.setData({
-                    searching: true,
-                    devicesList: []
-                  })
-                }
-              })
-            },
-            fail: function (res) {
-              console.log(res)
-              wx.showModal({
-                title: '提示',
-                content: '请检查手机蓝牙是否打开',
-                showCancel: false,
-                success: function (res) {
-                  that.setData({
-                    searching: false
-                  })
-                }
-              })
-            }
-          })
-        }
-      })
-    }
-    else {
-      wx.stopBluetoothDevicesDiscovery({
-        success: function (res) {
-          console.log(res)
-          that.setData({
-            searching: false
-          })
-        }
-      })
-    }
-  },
-  Connect: function (e) {
-    var that = this
-    var advertisData, name
-    console.log(e.currentTarget.id)
-    for (var i = 0; i < that.data.devicesList.length; i++) {
-      if (e.currentTarget.id == that.data.devicesList[i].deviceId) {
-        name = that.data.devicesList[i].name
-        advertisData = that.data.devicesList[i].advertisData
-      }
-    }
+
+  ConnectByID: function(targetID){
+    var that=this  
+    //避免短时间内重复连接
+    if(that.data.searching == false)
+      return  
+    that.setData({
+      searching: false
+    })
+    console.log("connect:",targetID)
     wx.stopBluetoothDevicesDiscovery({
       success: function (res) {
         console.log(res)
-        that.setData({
-          searching: false
-        })
       }
     })
     wx.showLoading({
       title: '连接蓝牙设备中...',
     })
     wx.createBLEConnection({
-      deviceId: e.currentTarget.id,
+      deviceId: targetID,
       success: function (res) {
         console.log(res)
         wx.hideLoading()
@@ -93,7 +38,7 @@ Page({
         console.log(platform)
         if(platform == "android"){          
           wx.navigateTo({
-            url: '../device/device?connectedDeviceId=' + e.currentTarget.id + '&name=' + name
+            url: '../device/device?connectedDeviceId=' + targetID
           })
         }
         else{
@@ -110,7 +55,7 @@ Page({
                 serviceId: '0783B03E-8535-B5A0-7140-A304D2495CB7',
                 success: function(res) {
                   wx.navigateTo({
-                    url: '../device/device?connectedDeviceId=' + e.currentTarget.id + '&name=' + name
+                    url: '../device/device?connectedDeviceId=' + targetID
                   })
                 },
                 fail:function(){
@@ -147,9 +92,105 @@ Page({
       }
     })
   },
+  SearchClick: function(){
+    var that=this    
+    that.setData({qrcodeMac:""})
+    that.Search()
+  },
+  Search: function () {
+    var that = this
+    if (!that.data.searching) {
+      wx.closeBluetoothAdapter({
+        complete: function (res) {
+          console.log(res)
+          wx.openBluetoothAdapter({
+            success: function (res) {
+              console.log(res)
+              wx.getBluetoothAdapterState({
+                success: function (res) {
+                  console.log(res)
+                }
+              })
+              wx.startBluetoothDevicesDiscovery({
+                allowDuplicatesKey: false,
+                success: function (res) {
+                  
+                  console.log("search")
+                  console.log(res)
+                  that.setData({
+                    searching: true,
+                    devicesList: []
+                  })
+                }
+              })
+            },
+            fail: function (res) {
+              console.log(res)
+              wx.showModal({
+                title: '提示',
+                content: '请检查手机蓝牙是否打开',
+                showCancel: false,
+                success: function (res) {
+                  that.setData({
+                    searching: false
+                  })
+                }
+              })
+            }
+          })
+        }
+      })
+    }
+    else {
+      wx.stopBluetoothDevicesDiscovery({
+        success: function (res) {
+          console.log(res)
+          that.setData({
+            searching: false
+          })
+        }
+      })
+    }
+  },
+
+  ScanQR: function(){
+    var that=this
+    that.setData({qrcodeMac:""})
+    wx.scanCode({
+      success(res) {
+        that.setData({qrcodeMac:res.result}) 
+        that.Search()
+      }
+    })
+  },
+  ConnectClick: function (e) {
+    var that = this
+    console.log(e.currentTarget.id)
+    that.ConnectByID(e.currentTarget.id)
+    //var advertisData, name
+    // for (var i = 0; i < that.data.devicesList.length; i++) {
+    //   if (e.currentTarget.id == that.data.devicesList[i].deviceId) {
+    //     name = that.data.devicesList[i].name
+    //     advertisData = that.data.devicesList[i].advertisData
+    //   }
+    // }
+
+  },
+  ConnectByMac: function()
+  {
+    var that=this
+    console.log("qrcode",that.data.qrcodeMac)
+    if(that.data.qrcodeMac!=""){
+      for (var i = 0; i < that.data.devicesList.length; i++) {
+        if (that.data.qrcodeMac == that.data.devicesList[i].advertisData) {
+          that.ConnectByID(that.data.devicesList[i].deviceId)
+        }
+      }
+    }    
+  },
   onLoad: function (options) {
     var that = this
-    var list_height = ((app.globalData.SystemInfo.windowHeight - 50) * (750 / app.globalData.SystemInfo.windowWidth)) - 60
+    var list_height = ((app.globalData.SystemInfo.windowHeight - 50) * (750 / app.globalData.SystemInfo.windowWidth)) - 110
     that.setData({
       list_height: list_height
     })
@@ -224,6 +265,7 @@ Page({
           that.data.devicesList.push(devices[0])
         }
       }
+      that.ConnectByMac()
       that.setData({
         devicesList: that.data.devicesList
       })

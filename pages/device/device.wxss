@@ -11,8 +11,14 @@ page {
   border: 1px solid lightgray;
   border-radius: 6px;
 }
-.button {
-  position: fixed;
-  width: 690rpx;
-  bottom: 30rpx;
+.button {  
+  margin-top:20px;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+.layout_horizontal{
+  height: 100rpx;
+  display: flex;
+  /*row 横向  column 列表  */
+  flex-direction: row;
 }

@@ -21,7 +21,7 @@ page {
   border-style: none;
 }
 .button {
-  position: fixed;
+  height: 80rpx;
   width: 690rpx;
-  bottom: 30rpx;
+  margin: 10rpx;
 }
