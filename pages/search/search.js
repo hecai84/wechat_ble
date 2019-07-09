@@ -8,13 +8,18 @@ Page({
 
   ConnectByID: function(targetID){
     var that=this  
-    //避免短时间内重复连接
-    if(that.data.searching == false)
-      return  
-    that.setData({
-      searching: false
-    })
-    console.log("connect:",targetID)
+    console.log("ConnectByID:",targetID)
+    var name,advertisData
+    //获取当前的name和ad
+    for (var i = 0; i < that.data.devicesList.length; i++) {
+      if (targetID == that.data.devicesList[i].deviceId) {
+        name=that.data.devicesList[i].name
+        advertisData=that.data.devicesList[i].advertisData
+        break
+      }
+    }
+
+    console.log("connect:"+targetID+"|"+name+"|"+advertisData)
     wx.stopBluetoothDevicesDiscovery({
       success: function (res) {
         console.log(res)
@@ -38,24 +43,25 @@ Page({
         console.log(platform)
         if(platform == "android"){          
           wx.navigateTo({
-            url: '../device/device?connectedDeviceId=' + targetID
+            url: '../device/device?connectedDeviceId=' + targetID +'&name='+name+'&advertisData='+advertisData
           })
         }
         else{
           console.log('ios device')
           wx.getBLEDeviceServices({
             // 这里的 deviceId 需要已经通过 createBLEConnection 与对应设备建立链接
-            deviceId: e.currentTarget.id,
+            deviceId: targetID,
             success: function (res) {
               console.log("getBLEDeviceServices success")
               console.log(JSON.stringify(res))
               //获取设备特征对象
               wx.getBLEDeviceCharacteristics({
-                deviceId: e.currentTarget.id,
+                deviceId: targetID,
                 serviceId: '0783B03E-8535-B5A0-7140-A304D2495CB7',
                 success: function(res) {
+                  console.log('../device/device?connectedDeviceId=' + targetID +'&name='+name+'&advertisData='+advertisData)
                   wx.navigateTo({
-                    url: '../device/device?connectedDeviceId=' + targetID
+                    url: '../device/device?connectedDeviceId=' + targetID +'&name='+name+'&advertisData='+advertisData
                   })
                 },
                 fail:function(){
@@ -99,6 +105,7 @@ Page({
   },
   Search: function () {
     var that = this
+    console.log("search:",that.data.searching)
     if (!that.data.searching) {
       wx.closeBluetoothAdapter({
         complete: function (res) {
@@ -115,7 +122,7 @@ Page({
                 allowDuplicatesKey: false,
                 success: function (res) {
                   
-                  console.log("search")
+                  
                   console.log(res)
                   that.setData({
                     searching: true,
@@ -154,14 +161,23 @@ Page({
   },
 
   ScanQR: function(){
-    var that=this
-    that.setData({qrcodeMac:""})
+    var that=this    
+    that.setData({
+      searching: false,
+      qrcodeMac:""
+    })      
     wx.scanCode({
       success(res) {
-        that.setData({qrcodeMac:res.result}) 
+        that.setData({
+          qrcodeMac:res.result,
+        }) 
         that.Search()
+        setTimeout(function() {
+          that.ConnectByQrcode()
+        }, 1500)
       }
     })
+    
   },
   ConnectClick: function (e) {
     var that = this
@@ -176,17 +192,31 @@ Page({
     // }
 
   },
-  ConnectByMac: function()
+  ConnectByQrcode: function()
   {
     var that=this
-    console.log("qrcode",that.data.qrcodeMac)
+    console.log("qrcode:",that.data.qrcodeMac," devicelen:",that.data.devicesList.length)
     if(that.data.qrcodeMac!=""){
       for (var i = 0; i < that.data.devicesList.length; i++) {
         if (that.data.qrcodeMac == that.data.devicesList[i].advertisData) {
-          that.ConnectByID(that.data.devicesList[i].deviceId)
+          var targetID=that.data.devicesList[i].deviceId
+          //避免短时间内重复连接
+          if(that.data.searching == false)
+            return  
+          that.setData({
+            searching: false,
+            qrcodeMac:""
+          })      
+          that.ConnectByID(targetID)
+          break
         }
       }
-    }    
+    }   
+    
+    that.setData({
+      searching: false,
+      qrcodeMac:""
+    })       
   },
   onLoad: function (options) {
     var that = this
@@ -265,7 +295,6 @@ Page({
           that.data.devicesList.push(devices[0])
         }
       }
-      that.ConnectByMac()
       that.setData({
         devicesList: that.data.devicesList
       })
@@ -274,11 +303,14 @@ Page({
   onReady: function () {
 
   },
-  onShow: function () {
-    wx.closeBluetoothAdapter({
-      complete: function (res) {
-      }
-    })
+  onShow: function () {    
+    if(this.data.qrcodeMac=="")
+    {
+      wx.closeBluetoothAdapter({
+        complete: function (res) {
+        }
+      })
+    }
   },
   onHide: function () {
     var that = this

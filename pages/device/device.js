@@ -1,4 +1,6 @@
 const app = getApp()
+const md5 = require('../../assets/js/md5.js')
+const SECRETKEY = 'fyJygAw3nUN4JwU'
 Page({
   data: {
     inputText: '',
@@ -6,7 +8,10 @@ Page({
     connectedDeviceId: '',
     services: {},
     characteristics: {},
-    connected: true
+    name:'',
+    advertisData:'',
+    connected: true,
+    salt:''
   },
   bindInput: function (e) {
     this.setData({
@@ -32,12 +37,19 @@ Page({
   Send: function () {
     var that = this
     if (that.data.connected) {
-      var buffer = new ArrayBuffer(that.data.inputText.length)
+      var buffer = new ArrayBuffer(that.data.inputText.length+8+1)
       var dataView = new Uint8Array(buffer)
-      for (var i = 0; i < that.data.inputText.length; i++) {
-        dataView[i] = that.data.inputText.charCodeAt(i)
+      var hex = md5.hexMD5(that.data.inputText+that.data.salt+that.data.advertisData+SECRETKEY);
+      console.log("hex:",hex)
+      for(var i=0;i<8;i++)
+      {
+        dataView[i] = hex.charCodeAt(i+8)
       }
-
+      for (var i = 0; i < that.data.inputText.length; i++) {
+        dataView[i+8] = that.data.inputText.charCodeAt(i)
+      }
+      dataView[that.data.inputText.length + 8]='\0'
+      console.log("send:",dataView);
       wx.writeBLECharacteristicValue({
         deviceId: that.data.connectedDeviceId,
         serviceId: '0783B03E-8535-B5A0-7140-A304D2495CB7',
@@ -65,7 +77,9 @@ Page({
     var that = this
     console.log(options)
     that.setData({
-      connectedDeviceId: options.connectedDeviceId
+      connectedDeviceId: options.connectedDeviceId,
+      name:options.name,
+      advertisData:options.advertisData
     })
     wx.getBLEDeviceServices({
       deviceId: that.data.connectedDeviceId,
@@ -104,6 +118,12 @@ Page({
     wx.onBLECharacteristicValueChange(function (res) {
       
       var receiveText = app.buf2string(res.value)
+      if(receiveText.indexOf('salt:')==0)
+      {
+        that.setData({
+          salt: receiveText.substr(5,2)
+        })
+      }
       console.log('接收到数据：' + receiveText)
       that.setData({
         receiveText: receiveText
