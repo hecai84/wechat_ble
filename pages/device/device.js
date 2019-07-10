@@ -34,11 +34,13 @@ Page({
     this.setData({inputText: "open60"})
     this.Send()
   },
+  //发送指令
   Send: function () {
     var that = this
     if (that.data.connected) {
       var buffer = new ArrayBuffer(that.data.inputText.length+8+1)
       var dataView = new Uint8Array(buffer)
+      //添加签名
       var hex = md5.hexMD5(that.data.inputText+that.data.salt+that.data.advertisData+SECRETKEY);
       console.log("hex:",hex)
       for(var i=0;i<8;i++)
@@ -115,13 +117,15 @@ Page({
         connected: res.connected
       })
     })
+    //注册消息之后的回调函数
+    //蓝牙设备发送的消息
     wx.onBLECharacteristicValueChange(function (res) {
       
       var receiveText = app.buf2string(res.value)
       if(receiveText.indexOf('salt:')==0)
       {
         that.setData({
-          salt: receiveText.substr(5,2)
+          salt: receiveText.substr(5)
         })
       }
       console.log('接收到数据：' + receiveText)

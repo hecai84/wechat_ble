@@ -107,9 +107,11 @@ Page({
     var that = this
     console.log("search:",that.data.searching)
     if (!that.data.searching) {
+      //关闭现有的蓝牙连接
       wx.closeBluetoothAdapter({
         complete: function (res) {
           console.log(res)
+          //打开蓝牙适配
           wx.openBluetoothAdapter({
             success: function (res) {
               console.log(res)
@@ -118,10 +120,10 @@ Page({
                   console.log(res)
                 }
               })
+              //开始搜索蓝牙设备
               wx.startBluetoothDevicesDiscovery({
                 allowDuplicatesKey: false,
-                success: function (res) {
-                  
+                success: function (res) {              
                   
                   console.log(res)
                   that.setData({
@@ -171,6 +173,7 @@ Page({
         that.setData({
           qrcodeMac:res.result,
         }) 
+        //扫码成功后,搜索查找指定的蓝牙设备并连接
         that.Search()
         setTimeout(function() {
           that.ConnectByQrcode()
@@ -183,14 +186,6 @@ Page({
     var that = this
     console.log(e.currentTarget.id)
     that.ConnectByID(e.currentTarget.id)
-    //var advertisData, name
-    // for (var i = 0; i < that.data.devicesList.length; i++) {
-    //   if (e.currentTarget.id == that.data.devicesList[i].deviceId) {
-    //     name = that.data.devicesList[i].name
-    //     advertisData = that.data.devicesList[i].advertisData
-    //   }
-    // }
-
   },
   ConnectByQrcode: function()
   {
