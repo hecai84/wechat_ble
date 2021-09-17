@@ -14,7 +14,7 @@ Page({
     for (var i = 0; i < that.data.devicesList.length; i++) {
       if (targetID == that.data.devicesList[i].deviceId) {
         name=that.data.devicesList[i].name
-        advertisData=that.data.devicesList[i].advertisData
+        advertisData = that.data.devicesList[i].advertisData.substring(2)
         break
       }
     }
@@ -193,17 +193,20 @@ Page({
     console.log("qrcode:",that.data.qrcodeMac," devicelen:",that.data.devicesList.length)
     if(that.data.qrcodeMac!=""){
       for (var i = 0; i < that.data.devicesList.length; i++) {
-        if (that.data.qrcodeMac == that.data.devicesList[i].advertisData) {
-          var targetID=that.data.devicesList[i].deviceId
-          //避免短时间内重复连接
-          if(that.data.searching == false)
-            return  
-          that.setData({
-            searching: false,
-            qrcodeMac:""
-          })      
-          that.ConnectByID(targetID)
-          break
+        if (that.data.devicesList[i].advertisData.length>12)
+        {  
+          if (that.data.qrcodeMac == that.data.devicesList[i].advertisData.substring(2)) {
+            var targetID=that.data.devicesList[i].deviceId
+            //避免短时间内重复连接
+            if(that.data.searching == false)
+              return  
+            that.setData({
+              searching: false,
+              qrcodeMac:""
+            })      
+            that.ConnectByID(targetID)
+            break
+          }
         }
       }
     }   

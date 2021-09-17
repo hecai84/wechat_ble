@@ -29,9 +29,20 @@ Page({
     this.setData({inputText: "open30"})
     this.Send()
   },
-  Send60: function()
-  {
-    this.setData({inputText: "open60"})
+  Send60: function () {
+    this.setData({ inputText: "open60" })
+    this.Send()
+  },
+  SendOpen: function () {
+    this.setData({ inputText: "openbat" })
+    this.Send()
+  },
+  SendClose: function () {
+    this.setData({ inputText: "close" })
+    this.Send()
+  }, 
+  SendCheckBat: function () {
+    this.setData({ inputText: "checkbat" })
     this.Send()
   },
   //发送指令

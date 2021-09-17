@@ -7,6 +7,11 @@
       <button type="primary" class="button" bindtap="Send30">30分钟</button>
       <button type="primary" class="button" bindtap="Send60">1小时</button>
   </view>
+    <view class="layout_horizontal">
+      <button type="primary" class="button" bindtap="SendOpen">打开电池</button>
+      <button type="primary" class="button" bindtap="SendClose">关闭电池</button>
+      <button type="primary" class="button" bindtap="SendCheckBat">电池状态</button>
+  </view>
     <text style="font-size:medium;margin-top:10px">发送内容：</text>
     <input class="input" value="{{inputText}}" bindinput="bindInput" maxlength="20"/>
     <text style="font-size:medium;margin-top:10px">接收内容：</text>
